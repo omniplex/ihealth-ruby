@@ -49,7 +49,7 @@ class Ihealth
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
     ihealthrequest = Net::HTTP::Post.new(url.path + "?" + url.query, headers)
     ihealthrequest.content_type = 'application/gzip'
-    ihealthrequest.set_form_data('visible_in_gui' => 'true')
+    #ihealthrequest.set_form_data('visible_in_gui' => 'true')
     ihealthrequest.body_stream = File.open(filepath, 'rb')
     response = ihealthclient.request(ihealthrequest)
     response.code == "303" ? (return response['location'][/[0-9]*$/,0]) : (return nil)
