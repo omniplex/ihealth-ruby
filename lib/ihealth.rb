@@ -186,8 +186,7 @@ class Ihealth
   #   # response = ihealthclient.start do |http|
   #   #   http.request(httprequest)
   #   # end
-  #   response.code != "200" ? (return nil) : (t_commands = JSON.parse(response.body))
-  #   return t_commands['qvCommandOutputList'] 
+  #   response.code != "200" ? (return nil) : (return response.body)
   # end
   
   
