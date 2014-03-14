@@ -189,6 +189,44 @@ class Ihealth
   #   response.code != "200" ? (return nil) : (return response.body)
   # end
   
+    def get_file_list qid, format = "json"
+    authenticate if !@authenticated
+    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/files.#{format}")
+    headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
+    @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
+    ihealthclient.use_ssl = true
+    ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    httprequest = Net::HTTP::Get.new(url.path, headers)
+    httprequest.content_type = 'application/text'
+    response = ihealthclient.start do |http|
+      http.request(httprequest)
+    end
+    response.code != "200" ? (return nil) : (return response.body)
+  end
+
+     def get_file qid, fileid, location
+    authenticate if !@authenticated
+    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/files/#{fileid}")
+    headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
+    @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
+    ihealthclient.use_ssl = true
+    ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    httprequest = Net::HTTP::Get.new(url.path, headers)
+    httprequest.content_type = 'application/octet-stream'
+    response = ihealthclient.start do |http|
+      begin
+        file = open(location,'wb')
+        http.request(httprequest) do |response|
+          response.read_body do |segment|
+            file.write(segment)
+          end
+        end
+      ensure
+        file.close
+      end
+    end
+    response.code != "200" ? (return nil) : (return location)
+  end
   
 
 # no reason to call authenticate directly

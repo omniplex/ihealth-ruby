@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'ihealth'
-  s.version     = '2.2.2'
+  s.version     = '2.2.3'
   s.summary     = "Interface to F5s iHealth API"
   s.summary     = "An abstraction layer to provide functionality to F5's iHealth reporting interface"
   s.author      = 'Dave B. Greene'
