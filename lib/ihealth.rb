@@ -15,7 +15,6 @@
 require 'net/http'
 require 'net/https'
 require 'uri'
-require 'json'
 
 # This class provides the interface to F5s iHealth API system
 # and requires that you have an active account with F5.
@@ -23,7 +22,7 @@ class Ihealth
 
   # Sets the default "User Agent" that will be passed to identify the application
   # Please Change the User Agent to be descriptive for your organization.
-  USER_AGENT = "Ruby iHealth Gem/2.3.0"
+  USER_AGENT = "Ruby iHealth Gem/2.2.3"
 
   # Creates the initial connection by performaing authentication
   def initialize username, password, proxyserver = nil, proxyport = nil, proxyuser = nil, proxypass = nil
@@ -70,7 +69,8 @@ class Ihealth
     response = ihealthclient.start do |http| 
       http.request(httprequest)
     end
-    response.code != "200" ? (raise "We received #{response.code}") : (return t_ids = JSON.parse(response.body))
+    response.code != "200" ? (raise "We received #{response.code}") : (return response.body)
+   
   end
   
   # Gets meta data for a particular ID where a qkview has already been upladed to the iHealth system.
@@ -87,7 +87,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (return t_meta = JSON.parse(response.body))
+    response.code != "200" ? (return nil) : (return response.body)
   end
   
   # Gets the diagnostic data for an ID where a qkview has already been uploaded to the iHealth system.
@@ -105,7 +105,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (return t_diagnostic = JSON.parse(response.body))
+    response.code != "200" ? (return nil) : (return response.body)
   end
   
   # Deletes a qkview from the system.
@@ -152,7 +152,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (return t_commands = JSON.parse(response.body))
+    response.code != "200" ? (return nil) : (return response.body)
   end
 
   # Get the result from a single command
@@ -169,7 +169,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (return t_commands = JSON.parse(response.body))
+    response.code != "200" ? (return nil) : (return response.body)
   end
 
 
