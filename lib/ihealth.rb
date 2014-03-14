@@ -50,13 +50,14 @@ class Ihealth
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
     ihealthrequest = Net::HTTP::Post.new(url.path + "?" + url.query, headers)
     ihealthrequest.content_type = 'application/gzip'
+    ihealthrequest.set_form_data('visible_in_gui' => 'true')
     ihealthrequest.body_stream = File.open(filepath, 'rb')
     response = ihealthclient.request(ihealthrequest)
     response.code == "303" ? (return response['location'][/[0-9]*$/,0]) : (return nil)
   end
 
   # Gets a list of IDs that are stored in the iHealth system after qkviews have been uploaded.
-  def get_id_list format = "json"
+  def get_list format = "json"
     authenticate if !@authenticated
     url = URI("#{@IHEALTHBASE}qkviews.#{format}")
     headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
@@ -69,12 +70,11 @@ class Ihealth
     response = ihealthclient.start do |http| 
       http.request(httprequest)
     end
-    response.code != "200" ? (raise "We received #{response.code}") : (t_ids = JSON.parse(response.body))
-    return t_ids['qvList']['id']
+    response.code != "200" ? (raise "We received #{response.code}") : (return t_ids = JSON.parse(response.body))
   end
   
   # Gets meta data for a particular ID where a qkview has already been upladed to the iHealth system.
-  def get_meta_for_id qid, format = "json"
+  def get_meta qid, format = "json"
     authenticate if !@authenticated
     url = URI("#{@IHEALTHBASE}qkviews/#{qid}.#{format}")
     headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
@@ -87,7 +87,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (t_meta = JSON.parse(response.body))
+    response.code != "200" ? (return nil) : (return t_meta = JSON.parse(response.body))
   end
   
   # Gets the diagnostic data for an ID where a qkview has already been uploaded to the iHealth system.
@@ -105,8 +105,7 @@ class Ihealth
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (t_diagnostic = JSON.parse(response.body))
-    return t_diagnostic['qvDiagnosticOutput'] 
+    response.code != "200" ? (return nil) : (return t_diagnostic = JSON.parse(response.body))
   end
   
   # Deletes a qkview from the system.
@@ -117,7 +116,7 @@ class Ihealth
     @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port, @proxyserver, @proxyport, @proxyuser, @proxypass))
     ihealthclient.use_ssl = true
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    httprequest = Net::HTTP::Delete.new(url.path + "?" + url.query, headers)
+    httprequest = Net::HTTP::Delete.new(url.path, headers)
     httprequest.content_type = 'application/xml'
     response = ihealthclient.start do |http|
       http.request(httprequest)
@@ -132,7 +131,7 @@ class Ihealth
     @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port, @proxyserver, @proxyport, @proxyuser, @proxypass))
     ihealthclient.use_ssl = true
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    httprequest = Net::HTTP::Delete.new(url.path + "?" + url.query, headers)
+    httprequest = Net::HTTP::Delete.new(url.path, headers)
     httprequest.content_type = 'application/xml'
     response = ihealthclient.start do |http|
       http.request(httprequest)
@@ -141,7 +140,6 @@ class Ihealth
   end
 
   # This method returns the list of available commands to execute against a given diagnostic
-  # TODO: Fix 
   def get_command_list qid, format = "json"
     authenticate if !@authenticated
     url = URI("#{@IHEALTHBASE}qkviews/#{qid}/commands.#{format}")
@@ -149,48 +147,48 @@ class Ihealth
     @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
     ihealthclient.use_ssl = true
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
+    httprequest = Net::HTTP::Get.new(url.path, headers)
     httprequest.content_type = 'application/xml'
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (t_commands = JSON.parse(response.body))
-    return t_commands['qvCommandList'] 
+    response.code != "200" ? (return nil) : (return t_commands = JSON.parse(response.body))
   end
 
   # Get the result from a single command
+  # Currently there is a bug in iHealth that only allows a single command to work.
   def get_command_output qid, command, format = "json"
     authenticate if !@authenticated
-    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/command.#{format}")
+    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/commands/#{command}.#{format}")
     headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
     @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
     ihealthclient.use_ssl = true
     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
+    httprequest = Net::HTTP::Get.new(url.path, headers)
     httprequest.content_type = 'application/xml'
     response = ihealthclient.start do |http|
       http.request(httprequest)
     end
-    response.code != "200" ? (return nil) : (t_commands = JSON.parse(response.body))
-    return t_commands['qvCommandOutputList'] 
+    response.code != "200" ? (return nil) : (return t_commands = JSON.parse(response.body))
   end
 
-  def get_commands_output qid, commands, format = "json"
-    authenticate if !@authenticated
-    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/command.#{format}")
-    respone = make_request url
-    # headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
-    # @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
-    # ihealthclient.use_ssl = true
-    # ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    # httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
-    # httprequest.content_type = 'application/xml'
-    # response = ihealthclient.start do |http|
-    #   http.request(httprequest)
-    # end
-    response.code != "200" ? (return nil) : (t_commands = JSON.parse(response.body))
-    return t_commands['qvCommandOutputList'] 
-  end
+
+  # def get_commands_output qid, commands, format = "json"
+  #   authenticate if !@authenticated
+  #   url = URI("#{@IHEALTHBASE}qkviews/#{qid}/command.#{format}")
+  #   respone = make_request url
+  #   # headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
+  #   # @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
+  #   # ihealthclient.use_ssl = true
+  #   # ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  #   # httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
+  #   # httprequest.content_type = 'application/xml'
+  #   # response = ihealthclient.start do |http|
+  #   #   http.request(httprequest)
+  #   # end
+  #   response.code != "200" ? (return nil) : (t_commands = JSON.parse(response.body))
+  #   return t_commands['qvCommandOutputList'] 
+  # end
   
   
 
