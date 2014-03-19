@@ -22,7 +22,7 @@ class Ihealth
 
   # Sets the default "User Agent" that will be passed to identify the application
   # Please Change the User Agent to be descriptive for your organization.
-  USER_AGENT = "Ruby iHealth Gem/2.2.3"
+  USER_AGENT = "Ruby iHealth Gem/2.2.6"
 
   # Creates the initial connection by performaing authentication
   def initialize username, password, proxyserver = nil, proxyport = nil, proxyuser = nil, proxypass = nil
@@ -181,7 +181,7 @@ class Ihealth
     else
       commandstring = commands[0]
     end
-    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/commands.#{format}?#{commandstring}")
+    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/commands.#{format}?resources=#{commandstring}")
     respone = make_request url
      headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
      @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
