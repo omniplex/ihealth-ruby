@@ -173,21 +173,27 @@ class Ihealth
   end
 
 
-  # def get_commands_output qid, commands, format = "json"
-  #   authenticate if !@authenticated
-  #   url = URI("#{@IHEALTHBASE}qkviews/#{qid}/command.#{format}")
-  #   respone = make_request url
-  #   # headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
-  #   # @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
-  #   # ihealthclient.use_ssl = true
-  #   # ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
-  #   # httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
-  #   # httprequest.content_type = 'application/xml'
-  #   # response = ihealthclient.start do |http|
-  #   #   http.request(httprequest)
-  #   # end
-  #   response.code != "200" ? (return nil) : (return response.body)
-  # end
+  def get_commands_output qid, commands, format = "json"
+    authenticate if !@authenticated
+    commandstring = ""
+    if commands.count > 1
+      commands.each { |x| commandstring += x + ","}
+    else
+      commandstring = commands[0]
+    end
+    url = URI("#{@IHEALTHBASE}qkviews/#{qid}/commands.#{format}?#{commandstring}")
+    respone = make_request url
+     headers = {'User Agent' => USER_AGENT, 'Cookie' => @cookies }
+     @proxyserver.nil? ? (ihealthclient = Net::HTTP::new(url.host, url.port)) : (ihealthclient = Net::HTTP::new(url.host, url.port,@proxyserver, @proxyport, @proxyuser, @proxypass))
+     ihealthclient.use_ssl = true
+     ihealthclient.verify_mode = OpenSSL::SSL::VERIFY_NONE
+     httprequest = Net::HTTP::Get.new(url.path + "?" + url.query, headers)
+     httprequest.content_type = 'application/xml'
+     response = ihealthclient.start do |http|
+       http.request(httprequest)
+     end
+    response.code != "200" ? (return nil) : (return response.body)
+  end
   
     def get_file_list qid, format = "json"
     authenticate if !@authenticated
